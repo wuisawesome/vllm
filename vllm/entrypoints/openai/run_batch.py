@@ -105,7 +105,6 @@ async def main(args):
 
     openai_serving_chat = OpenAIServingChat(
         engine,
-        model_config,
         served_model_names,
         args.response_role,
     )
