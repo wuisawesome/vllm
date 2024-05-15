@@ -61,8 +61,9 @@ def read_file(path_or_url: str) -> str:
 
 def write_file(path_or_url: str, data: str) -> None:
     if path_or_url.startswith("http://") or path_or_url.startswith("https://"):
-        headers = {"Content-Type": "text/plain; charset=utf-8"}
-        resp = requests.put(path_or_url, data=data, headers=headers)
+        print("UPLOADING DATA TO PATH f{path_or_url=}")
+        pritn(data)
+        resp = requests.put(path_or_url, data=data)
         assert resp.ok, f"{resp.status_code=} {resp=}"
     else:
         # We should make this async, but as long as this is always run as a
@@ -112,7 +113,7 @@ async def main(args, engine, openai_serving_chat):
 
     # Temporary workaround for https://github.com/vllm-project/vllm/issues/4789
     import time
-    time.sleep(10)
+    time.sleep(60*60)
     sys.exit(0)
 
 
