@@ -112,8 +112,6 @@ async def main(args, engine, openai_serving_chat):
     write_file(args.output_file, output_buffer.read().strip())
 
     # Temporary workaround for https://github.com/vllm-project/vllm/issues/4789
-    import time
-    time.sleep(60*60)
     sys.exit(0)
 
 
