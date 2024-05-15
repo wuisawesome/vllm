@@ -61,8 +61,8 @@ def read_file(path_or_url: str) -> str:
 
 def write_file(path_or_url: str, data: str) -> None:
     if path_or_url.startswith("http://") or path_or_url.startswith("https://"):
-        print("UPLOADING DATA TO PATH f{path_or_url=}")
-        pritn(data)
+        print(f"UPLOADING DATA TO PATH f{path_or_url=}")
+        print(data)
         resp = requests.put(path_or_url, data=data)
         assert resp.ok, f"{resp.status_code=} {resp=}"
     else:
