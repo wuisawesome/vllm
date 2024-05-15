@@ -48,7 +48,7 @@ class OpenAIServing:
 
         self.max_model_len = 0
         # Lazy initialized
-        self.tokenizer: Union[PreTrainedTokenizer, PreTrainedTokenizerFast]
+        self.tokenizer: Union[PreTrainedTokenizer, PreTrainedTokenizerFast] = None
 
         try:
             event_loop = asyncio.get_running_loop()

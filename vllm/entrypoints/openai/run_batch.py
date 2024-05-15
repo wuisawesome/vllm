@@ -93,21 +93,7 @@ async def run_request(chat_serving: OpenAIServingChat,
     return batch_output
 
 
-async def main(args):
-    served_model_names = [args.model]
-
-    engine_args = AsyncEngineArgs.from_cli_args(args)
-    engine = AsyncLLMEngine.from_engine_args(
-        engine_args, usage_context=UsageContext.OPENAI_API_SERVER)
-
-    # When using single vLLM without engine_use_ray
-    model_config = await engine.get_model_config()
-
-    openai_serving_chat = OpenAIServingChat(
-        engine,
-        served_model_names,
-        args.response_role,
-    )
+async def main(args, engine, openai_serving_chat):
 
     # Submit all requests in the file to the engine "concurrently".
     response_futures = []
@@ -125,6 +111,8 @@ async def main(args):
     await write_file(args.output_file, output_buffer.read().strip())
 
     # Temporary workaround for https://github.com/vllm-project/vllm/issues/4789
+    import time
+    time.sleep(10)
     sys.exit(0)
 
 
@@ -134,4 +122,16 @@ if __name__ == "__main__":
     logger.info("vLLM API server version %s", vllm.__version__)
     logger.info("args: %s", args)
 
-    asyncio.run(main(args))
+    engine_args = AsyncEngineArgs.from_cli_args(args)
+    engine = AsyncLLMEngine.from_engine_args(
+        engine_args, usage_context=UsageContext.OPENAI_API_SERVER)
+
+    served_model_names = [args.model]
+
+    openai_serving_chat = OpenAIServingChat(
+        engine,
+        served_model_names,
+        args.response_role,
+    )
+
+    asyncio.run(main(args, engine, openai_serving_chat))
