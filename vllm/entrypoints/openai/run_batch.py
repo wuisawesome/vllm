@@ -61,7 +61,8 @@ def read_file(path_or_url: str) -> str:
 
 def write_file(path_or_url: str, data: str) -> None:
     if path_or_url.startswith("http://") or path_or_url.startswith("https://"):
-        resp = requests.put(path_or_url, data=data)
+        headers = {"Content-Type": "text/plain; charset=utf-8"}
+        resp = requests.put(path_or_url, data=data, headers=headers)
         assert resp.ok, f"{resp.status_code=} {resp=}"
     else:
         # We should make this async, but as long as this is always run as a
