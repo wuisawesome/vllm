@@ -3,7 +3,7 @@ import asyncio
 import sys
 from io import StringIO
 
-import aiohttp
+import requests
 
 import vllm
 from vllm.engine.arg_utils import AsyncEngineArgs
@@ -49,21 +49,20 @@ def parse_args():
     return parser.parse_args()
 
 
-async def read_file(path_or_url: str) -> str:
+def read_file(path_or_url: str) -> str:
     if path_or_url.startswith("http://") or path_or_url.startswith("https://"):
-        async with aiohttp.ClientSession() as session, \
-                   session.get(path_or_url) as resp:
-            return await resp.text()
+        resp = requests.get(path_or_url)
+        assert resp.ok, f"{resp.status_code=} {resp=}"
+        return resp.text
     else:
         with open(path_or_url, "r") as f:
             return f.read()
 
 
-async def write_file(path_or_url: str, data: str) -> None:
+def write_file(path_or_url: str, data: str) -> None:
     if path_or_url.startswith("http://") or path_or_url.startswith("https://"):
-        async with aiohttp.ClientSession() as session, \
-                   session.put(path_or_url, data=data.encode("utf-8")):
-            pass
+        resp = requests.put(path_or_url, data=data)
+        assert resp.ok, f"{resp.status_code=} {resp=}"
     else:
         # We should make this async, but as long as this is always run as a
         # standalone program, blocking the event loop won't effect performance
@@ -97,7 +96,7 @@ async def main(args, engine, openai_serving_chat):
 
     # Submit all requests in the file to the engine "concurrently".
     response_futures = []
-    for request_json in (await read_file(args.input_file)).strip().split("\n"):
+    for request_json in read_file(args.input_file).strip().split("\n"):
         request = BatchRequestInput.model_validate_json(request_json)
         response_futures.append(run_request(openai_serving_chat, request))
 
@@ -108,7 +107,7 @@ async def main(args, engine, openai_serving_chat):
         print(response.model_dump_json(), file=output_buffer)
 
     output_buffer.seek(0)
-    await write_file(args.output_file, output_buffer.read().strip())
+    write_file(args.output_file, output_buffer.read().strip())
 
     # Temporary workaround for https://github.com/vllm-project/vllm/issues/4789
     import time
