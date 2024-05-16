@@ -95,7 +95,6 @@ async def run_request(chat_serving: OpenAIServingChat,
 
 
 async def main(args, engine, openai_serving_chat):
-
     # Submit all requests in the file to the engine "concurrently".
     response_futures = []
     for request_json in read_file(args.input_file).strip().split("\n"):
@@ -123,7 +122,7 @@ if __name__ == "__main__":
 
     engine_args = AsyncEngineArgs.from_cli_args(args)
     engine = AsyncLLMEngine.from_engine_args(
-        engine_args, usage_context=UsageContext.OPENAI_API_SERVER)
+        engine_args, usage_context=UsageContext.OPENAI_BATCH_RUNNER)
 
     served_model_names = [args.model]
 
