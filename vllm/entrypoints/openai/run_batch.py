@@ -61,9 +61,10 @@ def read_file(path_or_url: str) -> str:
 
 def write_file(path_or_url: str, data: str) -> None:
     if path_or_url.startswith("http://") or path_or_url.startswith("https://"):
-        print(f"UPLOADING DATA TO PATH f{path_or_url=}")
-        print(data)
-        resp = requests.put(path_or_url, data=data)
+        # Most versions of requests have a string encoding bug, so encode the
+        # data ourselves until https://github.com/psf/requests/pull/6589 is
+        # widely distributed.
+        resp = requests.put(path_or_url, data=data.encode("utf-8"))
         assert resp.ok, f"{resp.status_code=} {resp=}"
     else:
         # We should make this async, but as long as this is always run as a
