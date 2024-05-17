@@ -2,6 +2,8 @@ import argparse
 import asyncio
 import sys
 from io import StringIO
+import time
+import os
 
 import requests
 
@@ -124,6 +126,11 @@ async def main(args, engine, openai_serving_chat):
 
     # Temporary workaround for https://github.com/vllm-project/vllm/issues/4789
     sys.exit(0)
+
+    # Especially in multi-gpu settings, sometimes Ray(?) really doesn't want to die.
+    time.sleep(10)
+    os.kill(os.getpid(), 9)
+
 
 
 if __name__ == "__main__":
