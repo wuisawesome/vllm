@@ -51,9 +51,14 @@ def parse_args():
 
 def read_file(path_or_url: str) -> str:
     if path_or_url.startswith("http://") or path_or_url.startswith("https://"):
-        resp = requests.get(path_or_url)
-        assert resp.ok, f"{resp.status_code=} {resp=}"
-        return resp.text
+        for i in range(3):
+            try:
+                resp = requests.get(path_or_url, timeout=30)
+                assert resp.ok, f"{resp.status_code=} {resp=}"
+                return resp.text
+            except Exception:
+                if i == 2:
+                    raise
     else:
         with open(path_or_url, "r") as f:
             return f.read()
@@ -61,11 +66,17 @@ def read_file(path_or_url: str) -> str:
 
 def write_file(path_or_url: str, data: str) -> None:
     if path_or_url.startswith("http://") or path_or_url.startswith("https://"):
-        # Most versions of requests have a string encoding bug, so encode the
-        # data ourselves until https://github.com/psf/requests/pull/6589 is
-        # widely distributed.
-        resp = requests.put(path_or_url, data=data.encode("utf-8"))
-        assert resp.ok, f"{resp.status_code=} {resp=}"
+        for i in range(3):
+            try:
+                # Most versions of requests have a string encoding bug, so encode the
+                # data ourselves until https://github.com/psf/requests/pull/6589 is
+                # widely distributed.
+                resp = requests.put(path_or_url, data=data.encode("utf-8"), timeout=30)
+                assert resp.ok, f"{resp.status_code=} {resp=}"
+                return
+            except Exception:
+                if i == 2:
+                    raise
     else:
         # We should make this async, but as long as this is always run as a
         # standalone program, blocking the event loop won't effect performance
