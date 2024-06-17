@@ -20,7 +20,6 @@ sudo    apt-get install -y --no-install-recommends \
         libssl-dev \
         curl \
         unzip \
-        unrar \
         cmake \
         net-tools \
         sudo \

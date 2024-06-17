@@ -108,16 +108,22 @@ def initialize_engine() -> LLMEngine:
                              max_loras=1,
                              max_lora_rank=8,
                              max_cpu_loras=2,
-                             max_num_seqs=256)
+                             max_num_seqs=256,
+                             tensor_parallel_size=2,
+                             )
     return LLMEngine.from_engine_args(engine_args)
 
 
 def main():
     """Main function that sets up and runs the prompt processing."""
+    import pdb;
+    pdb.set_trace()
     engine = initialize_engine()
+    """
     lora_path = snapshot_download(repo_id="yard1/llama-2-7b-sql-lora-test")
     test_prompts = create_test_prompts(lora_path)
     process_requests(engine, test_prompts)
+    """
 
 
 if __name__ == '__main__':

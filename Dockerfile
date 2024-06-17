@@ -7,10 +7,17 @@
 
 #################### BASE BUILD IMAGE ####################
 # prepare basic build environment
-FROM nvidia/cuda:12.4.1-devel-ubuntu22.04 AS dev
+FROM nvidia/cuda:12.4.1-devel-ubuntu20.04 AS dev
+
+ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update -y \
-    && apt-get install -y python3-pip git
+    && apt-get install -y software-properties-common \
+    && add-apt-repository ppa:deadsnakes/ppa \
+    && apt-get update -y \
+    && apt-get install -y python3.10-dev git curl
+
+RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
 
 # Workaround for https://github.com/openai/triton/issues/2507 and
 # https://github.com/pytorch/pytorch/issues/107960 -- hopefully
@@ -24,12 +31,12 @@ WORKDIR /workspace
 COPY requirements-common.txt requirements-common.txt
 COPY requirements-cuda.txt requirements-cuda.txt
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install -r requirements-cuda.txt
+    python3.10 -m pip install -r requirements-cuda.txt
 
 # install development dependencies
 COPY requirements-dev.txt requirements-dev.txt
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install -r requirements-dev.txt
+    python3.10 -m pip install -r requirements-dev.txt
 
 # cuda arch list used by torch
 # can be useful for both `dev` and `test`
@@ -46,7 +53,7 @@ FROM dev AS build
 # install build dependencies
 COPY requirements-build.txt requirements-build.txt
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install -r requirements-build.txt
+    python3.10 -m pip install -r requirements-build.txt
 
 # install compiler cache to speed up compilation leveraging local or remote caching
 RUN apt-get update -y && apt-get install -y ccache
@@ -69,15 +76,16 @@ ARG nvcc_threads=8
 ENV NVCC_THREADS=$nvcc_threads
 # make sure punica kernels are built (for LoRA)
 ENV VLLM_INSTALL_PUNICA_KERNELS=1
+ENV TORCH_CUDA_ARCH_LIST=7.5
 
 ENV CCACHE_DIR=/root/.cache/ccache
 RUN --mount=type=cache,target=/root/.cache/ccache \
     --mount=type=cache,target=/root/.cache/pip \
-    python3 setup.py bdist_wheel --dist-dir=dist
+    python3.10 setup.py bdist_wheel --dist-dir=dist
 
 # check the size of the wheel, we cannot upload wheels larger than 100MB
 COPY .buildkite/check-wheel-size.py check-wheel-size.py
-RUN python3 check-wheel-size.py dist
+RUN python3.10 check-wheel-size.py dist
 
 #################### EXTENSION Build IMAGE ####################
 
@@ -87,7 +95,7 @@ FROM nvidia/cuda:12.4.1-base-ubuntu22.04 AS vllm-base
 WORKDIR /vllm-workspace
 
 RUN apt-get update -y \
-    && apt-get install -y python3-pip git vim
+    && apt-get install -y python3.10-pip git vim
 
 # Workaround for https://github.com/openai/triton/issues/2507 and
 # https://github.com/pytorch/pytorch/issues/107960 -- hopefully
@@ -132,5 +140,5 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 
 ENV VLLM_USAGE_SOURCE production-docker-image
 
-ENTRYPOINT ["python3", "-m", "vllm.entrypoints.openai.api_server"]
+ENTRYPOINT ["python3.10", "-m", "vllm.entrypoints.openai.api_server"]
 #################### OPENAI API SERVER ####################
